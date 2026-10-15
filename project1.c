@@ -28,6 +28,10 @@ int8_t codepoint_size(char string[]) {
 uint8_t b0 = (unsigned char)string[0];
     int8_t n;
 
+	if(strlen(string) < 1){
+		return 0;
+	}
+
     if ((b0 & 0x80) == 0) {
         n = 1;
     } else if ((b0 & 0xE0) == 0xC0) {
@@ -153,6 +157,9 @@ int32_t codepoint_at(char str[], int32_t byte_index) {
 int is_animal_emoji_at(const char str[], int index){
 uint32_t len = strlen(str);
 
+	if(len < index || index < 0){
+		return 0;
+	}
     int byte_index = 0;
 
       int counter = 0;
@@ -228,6 +235,103 @@ uint32_t len = strlen(str);
     }
 }
 
+void next_utf8_char(char str[], int32_t cpi, char result[]){
+    
+    
+      int counter = 0;
+      int i = 0;
+      int byte_index = 0;
+      while(str[i] != '\0'){
+      uint8_t b0 = (unsigned char)str[i];
+      uint32_t n;
+  
+      if ((b0 & 0x80) == 0) {
+          n = 1;
+      } else if ((b0 & 0xE0) == 0xC0) {
+          n = 2;
+     } else if ((b0 & 0xF0) == 0xE0) {
+          n = 3;
+      } else if ((b0 & 0xF8) == 0xF0) {
+          n = 4;
+      } else {
+          return;
+      }
+      i += n;
+      counter++;
+      if(cpi == counter){
+          byte_index = i;
+      }
+      }
+      
+      if(counter < 4){
+          result[0] = '\0';
+          return;
+      }
+
+    uint32_t len = strlen(str);
+
+     if (cpi >= counter) {
+         return;
+     }
+ 
+     uint8_t b01 = (unsigned char)str[byte_index];
+     uint32_t cp;
+     uint32_t n1;
+ 
+     if ((b01 & 0x80) == 0) {
+         cp = b01;
+         n1 = 1;
+     } else if ((b01 & 0xE0) == 0xC0) {
+         cp = b01 & 0x1F;
+         n1 = 2;
+     } else if ((b01 & 0xF0) == 0xE0) {
+         cp = b01 & 0x0F;
+         n1 = 3;
+     } else if ((b01 & 0xF8) == 0xF0) {
+         cp = b01 & 0x07;
+         n1 = 4;
+     } else {
+         return;
+     }
+ 
+     for (uint32_t i = 1; i < n1; i++) {
+         uint8_t b = (unsigned char)str[byte_index + i];
+ 
+         if ((b & 0xC0) != 0x80) {
+             return;
+         }
+ 
+         cp = (cp << 6) | (b & 0x3F);
+     }
+     
+     cp++;
+     if (cp <= 0x7F) {
+        result[0] = cp;
+        result[1] = '\0';
+    } else if (cp <= 0x7FF) {
+        result[0] = 0xC0 | (cp >> 6);
+        result[1] = 0x80 | (cp & 0x3F);
+        result[2] = '\0';
+    } else if (cp <= 0xFFFF) {
+        result[0] = 0xE0 | (cp >> 12);
+        result[1] = 0x80 | ((cp >> 6) & 0x3F);
+        result[2] = 0x80 | (cp & 0x3F);
+        result[3] = '\0';
+    } else {
+        result[0] = 0xF0 | (cp >> 18);
+        result[1] = 0x80 | ((cp >> 12) & 0x3F);
+        result[2] = 0x80 | ((cp >> 6) & 0x3F);
+        result[3] = 0x80 | (cp & 0x3F);
+        result[4] = '\0';
+    }
+
+     //printf("1111111");
+     
+     
+
+}
+
+
 int main()
 {
 /*    printf("Is 🔥 ASCII? %d\n", is_ascii("🔥"));
@@ -273,7 +377,7 @@ int main()
 	char res[50];
 	strcpy(res, sen);
 	int ret = capitalize_ascii(res);
-	printf("%s\n", res);
+	printf("\"%s\"\n", res);
 
 	printf("Length in bytes: ");
 	int length = strlen(sen);
@@ -294,7 +398,7 @@ int main()
 	printf("\nSubstring of the first 6 code points: ");
 	char result[50];
 	utf8_substring(sen, 0, 6, result);
-	printf("%s\n", result);
+	printf("\"%s\"\n", result);
 
 	printf("Code points as decimal numbers: ");
 	for(int i = 0; sen[i] != '\0'; i++){
@@ -313,6 +417,16 @@ int main()
 			printf("%s ", result2);
 		}
 	}
+	printf("\nNext character of code point at index 3: ");
+	char result3[50];
+	int32_t idx = 3;
+	next_utf8_char(sen, idx, result3);
+	printf("%s", result3);
+
+
+
+
+
 
 
 
@@ -320,4 +434,5 @@ int main()
 
 	return 0;
 }
+
 
