@@ -387,11 +387,11 @@ int main()
 	int32_t len = utf8_strlen(sen);
 	printf("%d\n", len);
 
-	printf("Bytes per code points: ");
+	printf("Bytes per code point:");
 	for(int i = 0; sen[i] != '\0'; i++){
 		int8_t num = codepoint_size(&sen[i]);
 		if(num != -1){
-			printf("%d ", num);
+			printf(" %d", num);
 		}
 	}
 
@@ -400,11 +400,11 @@ int main()
 	utf8_substring(sen, 0, 6, result);
 	printf("\"%s\"\n", result);
 
-	printf("Code points as decimal numbers: ");
+	printf("Code points as decimal numbers:");
 	for(int i = 0; sen[i] != '\0'; i++){
 		int32_t nu  = codepoint_at(sen, i);
 		if(nu != -1){
-			printf("%d ", nu);
+				printf(" %d", nu);
 		}
 	}
 
